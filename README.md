@@ -19,7 +19,7 @@ else {
 }
 ```
 
-Whenver possible, fuctions should be defined like so:
+Whenever possible, functions should be defined like so:
 ```
 function funcName(args) {
    return args + 1;

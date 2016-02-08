@@ -7,6 +7,7 @@
 var io = require('socket.io')();
 var express = require('express');
 var multer = require('multer');
+var settings = require('settings.json');
 var app = express();
 
 // Global Variables
@@ -33,7 +34,11 @@ var storage = multer.diskStorage({
    filename: function (req, file, callback) {
       tempImage++;
       var ext = file.originalname.split(".")[this.length-1];
-      callback(null, tempImage+'.'+ext);
+      if (settings.filetypes.indexOf(ext) > -1) {
+         callback(null, tempImage+'.'+ext);
+      } else {
+         return false;
+      }
    }
 });
 
