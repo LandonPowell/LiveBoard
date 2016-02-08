@@ -6,6 +6,7 @@
   "repository": "",
   "author": "Landon Powell & Jayce Webb",
   "dependencies": {
+    "body-parser": "^1.14.2",
     "express": "^4.13.4",
     "jsonfile": "^2.2.3",
     "multer": "^1.1.0",

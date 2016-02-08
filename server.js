@@ -5,10 +5,12 @@
  
 // Node Modules
 var io = require('socket.io')();
+var fs = require("fs");
 var express = require('express');
 var multer = require('multer');
 var jsonfile = require('jsonfile');
-var settings = require('./settings.json');
+var bodyParser = require('body-parser')
+var settings = require('./config/settings.json');
 var app = express();
 
 // Global Variables
@@ -28,8 +30,12 @@ function htmlEscape(userPost) {
                   .replace(/\n/g, "<br/>");
 }
 
+function errorPage(req, res) {
+    return res.sendFile('errorpages/404.html');
+}
+
 // Setup Database
-jsonfile.readFile('database.json', function(err, obj) {
+jsonfile.readFile('./database/database.json', function(err, obj) {
     database = obj;
     if (err) {
         console.log('Database errors: '+err);
@@ -60,20 +66,28 @@ var upload = multer({
     }
 });
 
-// File upload
+// Express Setup
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+})); 
 app.use('/', express.static(__dirname + '/public/'));
 
 app.post('/upload', upload.single('file'), function(req, res){
-   res.redirect(req.file.filename);
+   var subject = req.body.userSubject;
+   var post = req.body.userPost;
+   res.send(subject + ": " + post);
+   // res.redirect(req.file.filename);
    res.status(204).end();
 });
 
 
-app.get('/rand', function(req, res) {
+/*app.get('/rand', function(req, res) {
    var board = req.param('board');
    var thread = req.param('thread');
    //var post = req.param('post');
    var pID = parseInt(thread, 36)-1;
+   if (board)
    if (thread) {
       if (pID < database[board].threads.length) {
          res.send(database[board].threads[pID]);
@@ -81,17 +95,16 @@ app.get('/rand', function(req, res) {
          res.send("No thread.");
       }
    } else {
-      var send = "<script>var threadTitles = [";
+      var send = [];
       for (var i = 0; i < database[board].threads.length; i++) {
-         send += '"'+database[board].threads[i].title+'"';
-         if (i < database[board].threads.length-1) {
-            send += ", ";
-         }
+         send.push(database[board].threads[i].title);
       }
-      send += "]</script>";
-      res.send(send);
+      res.sendFile(__dirname+'/index.html');
    }
-});
+});*/
+
+app.get('*', errorPage);
+app.head('*', errorPage);
 
 // Start server
 app.listen(process.env.PORT);
