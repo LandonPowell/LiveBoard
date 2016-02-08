@@ -1,0 +1,17 @@
+{
+   "ImageWrongFormat": [
+      "<h1>Incorrect image format</h1>",
+      "<h2>Ensure your image filetype is",
+      ".png, .jpg, .tiff, .bmp, .svg, .gif"
+   ],
+   "filetypes": [
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "tiff",
+      "tif",
+      "bmp",
+      "svg"
+   ]
+}
