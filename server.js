@@ -3,7 +3,7 @@
  * A live imageboard *
  *********************/
  
-// Node Modules
+//--- Node Modules
 var io = require('socket.io')();
 var fs = require("fs");
 var express = require('express');
@@ -13,12 +13,12 @@ var bodyParser = require('body-parser')
 var settings = require('./config/settings.json');
 var app = express();
 
-// Global Variables
+//--- Global Variables
 var database = {};
 var ImageCounter = {};
 var tempImage = 0;
 
-// Global Functions
+//--- Global Functions
 function htmlEscape(userPost) {
    return userPost.replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
@@ -31,10 +31,10 @@ function htmlEscape(userPost) {
 }
 
 function errorPage(req, res) {
-    return res.sendFile('errorpages/404.html');
+    return res.sendFile('./public/errors/404.html');
 }
 
-// Setup Database
+//--- Setup Database
 jsonfile.readFile('./database/database.json', function(err, obj) {
     database = obj;
     if (err) {
@@ -42,7 +42,7 @@ jsonfile.readFile('./database/database.json', function(err, obj) {
     }
 });
 
-// Config Multer
+//--- Config Multer
 var storage = multer.diskStorage({
    destination: function (req, file, callback) {
       callback(null, 'temp/');
@@ -66,7 +66,7 @@ var upload = multer({
     }
 });
 
-// Express Setup
+//--- Express Setup
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
@@ -106,5 +106,40 @@ app.post('/upload', upload.single('file'), function(req, res){
 app.get('*', errorPage);
 app.head('*', errorPage);
 
-// Start server
+//--- Start server
 app.listen(process.env.PORT);
+
+io.on('connection', function(socket){
+   socket.on('requestData', function(array){
+      var board = array[0];
+      var thread = array[1];
+      var post = array[2];
+      if (thread && board) {
+         if (thread > 0 && thread-1 < database[board].threads.length) {
+            socket.emit('receieveData', ["2", database[board].threads[thread-1]]);
+         } else {
+            socket.emit('receieveData', ["err", "Not a valid thread"]);
+         }
+      } else if (board) {
+         var sent = {
+            "threads":[]
+         };
+         for (var i  = 0; i < database[board].threads.length; i++) {
+            var leg = database[board].threads[i].subPosts.length;
+            sent.threads.push({
+               "title": database[board].threads[i].title,
+               "file": database[board].threads[i].file,
+               "content": database[board].threads[i].content,
+               "subPosts": [
+                  database[board].threads[i].subPosts[leg-3],
+                  database[board].threads[i].subPosts[leg-2],
+                  database[board].threads[i].subPosts[leg-1]
+               ]
+            });
+         }
+         socket.emit('receieveData', ["1", sent]);
+      } else {
+         
+      }
+   });
+});
