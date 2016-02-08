@@ -27,14 +27,13 @@ function htmlEscape(userPost) {
 
 // Config Multer
 var storage = multer.diskStorage({
-   destination: function (req, file, cb) {
-      cb(null, 'temp/');
+   destination: function (req, file, callback) {
+      callback(null, 'temp/');
    },
-   filename: function (req, file, cb) {
+   filename: function (req, file, callback) {
       tempImage++;
-      var ext = file.originalname.split(".");
-      ext = ext[ext.length-1];
-      cb(null, tempImage+'.'+ext);
+      var ext = file.originalname.split(".")[this.length-1];
+      callback(null, tempImage+'.'+ext);
    }
 });
 

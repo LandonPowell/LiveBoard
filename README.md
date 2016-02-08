@@ -27,7 +27,7 @@ function funcName(args) {
 ```
 
 ### To Run
-* First, change directory to the location of your SeaFour folder. For me, this would be
+* First, change directory to the location of your LiveBoard folder. For me, this would be
 
 
    `cd ~/Prog/WebDev/LiveBoard/`
