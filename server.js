@@ -4,14 +4,15 @@
  *********************/
  
 //--- Node Modules
-var io = require('socket.io')();
-var fs = require("fs");
 var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+var fs = require("fs");
 var multer = require('multer');
 var jsonfile = require('jsonfile');
-var bodyParser = require('body-parser')
-var settings = require('./config/settings.json');
-var app = express();
+var bodyParser = require('body-parser');
+var settings = require(__dirname + '/config/settings.json');
 
 //--- Global Variables
 var database = {};
@@ -31,11 +32,11 @@ function htmlEscape(userPost) {
 }
 
 function errorPage(req, res) {
-    return res.sendFile('./public/errors/404.html');
+    return res.sendFile(__dirname + '/public/errors/404.html');
 }
 
 //--- Setup Database
-jsonfile.readFile('./database/database.json', function(err, obj) {
+jsonfile.readFile(__dirname + '/database/database.json', function(err, obj) {
     database = obj;
     if (err) {
         console.log('Database errors: '+err);
@@ -76,7 +77,7 @@ app.use('/', express.static(__dirname + '/public/'));
 app.post('/upload', upload.single('file'), function(req, res){
    var subject = req.body.userSubject;
    var post = req.body.userPost;
-   res.send(subject + ": " + post);
+   // res.send(subject + ": " + post);
    // res.redirect(req.file.filename);
    res.status(204).end();
 });
@@ -107,16 +108,17 @@ app.get('*', errorPage);
 app.head('*', errorPage);
 
 //--- Start server
-app.listen(process.env.PORT);
+http.listen(process.env.PORT);
 
 io.on('connection', function(socket){
    socket.on('requestData', function(array){
+      console.log(array);
       var board = array[0];
       var thread = array[1];
       var post = array[2];
       if (thread && board) {
          if (thread > 0 && thread-1 < database[board].threads.length) {
-            socket.emit('receieveData', ["2", database[board].threads[thread-1]]);
+            socket.emit('receieveData', database[board].threads[thread-1]);
          } else {
             socket.emit('receieveData', ["err", "Not a valid thread"]);
          }
@@ -137,7 +139,7 @@ io.on('connection', function(socket){
                ]
             });
          }
-         socket.emit('receieveData', ["1", sent]);
+         socket.emit('receieveData', sent);
       } else {
          
       }
