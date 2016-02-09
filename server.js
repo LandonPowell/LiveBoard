@@ -2,20 +2,22 @@
  *     LiveBoard     *
  * A live imageboard *
  *********************/
- 
+console.log("Starting LiveChan Server...");
+
+
 //--- Node Modules
 var express = require('express');
 var app = express();
+var siofu = require("socketio-file-upload");
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var fs = require("fs");
-var multer = require('multer');
+
 var jsonfile = require('jsonfile');
 var bodyParser = require('body-parser');
 var settings = require(__dirname + '/config/settings.json');
 
 //--- Global Variables
-var database = {};
 var ImageCounter = {};
 var tempImage = 0;
 
@@ -36,6 +38,7 @@ function errorPage(req, res) {
 }
 
 //--- Setup Database
+var database = {};
 jsonfile.readFile(__dirname + '/database/database.json', function(err, obj) {
     database = obj;
     if (err) {
@@ -43,66 +46,14 @@ jsonfile.readFile(__dirname + '/database/database.json', function(err, obj) {
     }
 });
 
-//--- Config Multer
-var storage = multer.diskStorage({
-   destination: function (req, file, callback) {
-      callback(null, 'temp/');
-   },
-   filename: function (req, file, callback) {
-      tempImage++;
-      var ext = file.originalname.split(".");
-      ext = ext[ext.length-1];
-      if (settings.filetypes.indexOf(ext.toLowerCase()) > -1) {
-         callback(null, tempImage+'.'+ext);
-      } 
-      else {
-         return false;
-      }
-   }
-});
-var upload = multer({ 
-    storage: storage,
-    onFileUploadStart: function(file, req, res){
-        res.redirect(req.files.file.path);
-    }
-});
-
 //--- Express Setup
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
-})); 
+}));
+app.use(siofu.router);
+
 app.use('/', express.static(__dirname + '/public/'));
-
-app.post('/upload', upload.single('file'), function(req, res){
-   var subject = req.body.userSubject;
-   var post = req.body.userPost;
-   // res.send(subject + ": " + post);
-   // res.redirect(req.file.filename);
-   res.status(204).end();
-});
-
-
-/*app.get('/rand', function(req, res) {
-   var board = req.param('board');
-   var thread = req.param('thread');
-   //var post = req.param('post');
-   var pID = parseInt(thread, 36)-1;
-   if (board)
-   if (thread) {
-      if (pID < database[board].threads.length) {
-         res.send(database[board].threads[pID]);
-      } else {
-         res.send("No thread.");
-      }
-   } else {
-      var send = [];
-      for (var i = 0; i < database[board].threads.length; i++) {
-         send.push(database[board].threads[i].title);
-      }
-      res.sendFile(__dirname+'/index.html');
-   }
-});*/
 
 app.get('*', errorPage);
 app.head('*', errorPage);
@@ -117,8 +68,10 @@ io.on('connection', function(socket){
       var thread = array[1];
       var post = array[2];
       if (thread && board) {
+         var threadd = [];
          if (thread > 0 && thread-1 < database[board].threads.length) {
-            socket.emit('receieveData', database[board].threads[thread-1]);
+            threadd.push(database[board].threads[thread-1]);
+            socket.emit('receieveData', threadd);
          } else {
             socket.emit('receieveData', ["err", "Not a valid thread"]);
          }
