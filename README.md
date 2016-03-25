@@ -1,5 +1,7 @@
+#THIS IS NOT FINISHED SOFTWARE. IT IS NOT PRODUCTION READY. DO NOT USE. 
+
 # LiveBoard
-A live imageboard made by KitsumiTheFox (Jayce Webb) and Xultra (Landon Powell)
+A live imageboard made by Jayce Webb and Landon Powell
 
 ### Depends Upon
 * Node.JS
